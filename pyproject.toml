@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nuc-chart-mcp"
+version = "1.0.2"
+description = "MCP server for nxs-universal-chart and its declared dependency charts"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+  "PyYAML>=5.3",
+  "jsonschema>=4.19",
+]
+
+[project.scripts]
+nuc-chart-mcp = "nuc_chart_mcp.server:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]

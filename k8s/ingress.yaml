@@ -1,0 +1,23 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nuc-chart-mcp
+  namespace: nuc-chart-mcp
+  labels:
+    app.kubernetes.io/name: nuc-chart-mcp
+spec:
+  tls:
+    - hosts:
+        - mcp.example.com
+      secretName: nuc-chart-mcp-tls
+  rules:
+    - host: mcp.example.com
+      http:
+        paths:
+          - path: /mcp
+            pathType: Prefix
+            backend:
+              service:
+                name: nuc-chart-mcp
+                port:
+                  name: http

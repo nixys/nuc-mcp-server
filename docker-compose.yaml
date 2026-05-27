@@ -1,0 +1,61 @@
+# nuc-chart-mcp — local development compose
+#
+# Default mode: fetch nxs-universal-chart from GitHub at startup.
+# Local chart mode: set NUC_ROOT_CHART_DIR and mount the chart directory,
+#   see the "local chart" section comments below.
+#
+# Copy .env.example to .env and fill in the values before running:
+#   cp .env.example .env
+#   docker compose up --build
+
+services:
+  nuc-chart-mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: nuc-chart-mcp:dev
+    ports:
+      - "${NUC_HTTP_PORT:-8080}:8080"
+    environment:
+      # --- Chart source (choose one) ---
+
+      # Option A: clone from GitHub at startup (default)
+      NUC_ROOT_CHART_GIT_URL: ${NUC_ROOT_CHART_GIT_URL:-https://github.com/nixys/nxs-universal-chart.git}
+      NUC_ROOT_CHART_GIT_REF: ${NUC_ROOT_CHART_GIT_REF:-main}
+
+      # Option B: use local chart directory mounted as a volume (uncomment + set NUC_ROOT_CHART_DIR)
+      # NUC_ROOT_CHART_DIR: /tmp/nxs-universal-chart
+
+      # Option C: pull from OCI registry (uncomment + set both vars)
+      # NUC_ROOT_CHART_OCI_REF: oci://registry.nixys.ru/nuc/nxs-universal-chart
+      # NUC_ROOT_CHART_OCI_VERSION: ${NUC_ROOT_CHART_OCI_VERSION:-3.1.0}
+
+      # --- Cache ---
+      NUC_REMOTE_CACHE_DIR: /tmp/nuc-chart-mcp-cache
+
+      # --- HTTP transport ---
+      NUC_TRANSPORT: http
+      NUC_HTTP_BEARER_TOKEN: ${NUC_HTTP_BEARER_TOKEN:-}
+      NUC_ALLOWED_ORIGINS: ${NUC_ALLOWED_ORIGINS:-*}
+
+    volumes:
+      # Persistent cache for cloned/pulled charts between restarts
+      - chart-cache:/tmp/nuc-chart-mcp-cache
+
+      # Uncomment to mount a local nxs-universal-chart checkout (Option B):
+      # - /tmp/nxs-universal-chart:/tmp/nxs-universal-chart:ro
+
+      # Uncomment to also expose local dependency chart directories:
+      # - /tmp/nuc-common:/tmp/nuc-common:ro
+
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/healthz || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+    restart: unless-stopped
+
+volumes:
+  chart-cache:

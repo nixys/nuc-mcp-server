@@ -1,0 +1,87 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nuc-chart-mcp
+  namespace: nuc-chart-mcp
+  labels:
+    app.kubernetes.io/name: nuc-chart-mcp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: nuc-chart-mcp
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: nuc-chart-mcp
+    spec:
+      containers:
+        - name: nuc-chart-mcp
+          image: registry.example.com/nuc-chart-mcp:latest
+          imagePullPolicy: IfNotPresent
+          args:
+            - --transport
+            - http
+            - --bind
+            - 0.0.0.0
+            - --port
+            - "8080"
+            - --http-path
+            - /mcp
+          env:
+            - name: NUC_ROOT_CHART_GIT_URL
+              value: https://github.com/nixys/nxs-universal-chart.git
+            - name: NUC_ROOT_CHART_GIT_REF
+              value: v3.1.0
+            - name: NUC_REMOTE_CACHE_DIR
+              value: /tmp/nuc-chart-mcp-cache
+            - name: NUC_ALLOWED_ORIGINS
+              value: https://mcp.example.com
+            - name: NUC_HTTP_BEARER_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: nuc-chart-mcp-auth
+                  key: NUC_HTTP_BEARER_TOKEN
+            - name: NUC_CATALOG_TTL_SECONDS
+              value: "3600"
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 12
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 90
+            periodSeconds: 15
+            failureThreshold: 5
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      volumes:
+        - name: tmp
+          emptyDir: {}
