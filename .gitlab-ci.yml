@@ -1,8 +1,0 @@
-include:
-  - project: $CI_INCLUDE_PATH
-    ref: $CI_INCLUDE_REF
-    file:
-      - "/build.gitlab-ci.yml"
-
-stages:
-  - build
