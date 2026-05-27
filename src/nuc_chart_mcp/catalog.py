@@ -369,7 +369,7 @@ class ChartCatalog:
 
         candidates.extend(
             [
-                Path("/tmp/nxs-universal-chart"),
+                Path("/tmp/nxs-universal-chart"),  # nosec B108 — read-only discovery probe
                 Path.cwd().parent / "nxs-universal-chart",
                 Path.cwd() / "nxs-universal-chart",
             ]
